@@ -1,0 +1,18 @@
+services:
+    web:
+        build:
+            context: .
+            dockerfile: web.Dockerfile
+        container_name: web
+        restart: unless-stopped
+        dns:
+            - 1.1.1.1
+            - 1.0.0.1
+        ports:
+            - "8080:8080"
+            - "23:22"
+        volumes:
+            # Misconfiguration: the outer host Docker socket is exposed inside
+            # the web container. Root inside this container can therefore drive
+            # the outer Docker engine and break out to the main host.
+            - /var/run/docker.sock:/var/run/docker.sock
