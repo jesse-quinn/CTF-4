@@ -1,0 +1,3 @@
+# Python runtime state from the inner app
+**/__pycache__/
+*.pyc
