@@ -51,6 +51,16 @@ If some of those host ports are already in use on your machine, remap the left
 side of each `-p` flag (for example `-p 18080:8080 -p 2222:22 -p 2323:23`); the
 challenge itself is unaffected.
 
+## Hosting model
+
+Host the challenge as a running instance players connect to over the network;
+do not distribute the built image. The outer deploy credential is materialized
+at build time, so it is recoverable from the built image's `docker history` by
+anyone handed the image, which is not a concern for a network-hosted instance.
+Internet access is required only at first build (for the inner base image and
+the static Docker client); once built, the challenge, including the final
+socket-breakout step, runs with no outbound network.
+
 ## Rules
 
 - Do not read the flag files or the solution notes during setup. The challenge

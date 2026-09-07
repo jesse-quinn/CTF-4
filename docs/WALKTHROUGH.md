@@ -90,12 +90,19 @@ SSH.
 - Launch a container that mounts the outer host filesystem and read the outer
   root flag plus the deploy credential file:
 
+  Use an image the outer engine already holds from the inner build
+  (`python:3.12-slim-bookworm`, the inner web base) so the breakout needs no
+  network at solve time:
+
   ```bash
-  docker run --rm -v /:/host alpine cat /host/root/root.txt
-  docker run --rm -v /:/host alpine cat /host/root/deploy.env
+  docker run --rm -v /:/host python:3.12-slim-bookworm cat /host/root/root.txt
+  docker run --rm -v /:/host python:3.12-slim-bookworm cat /host/root/deploy.env
   ```
 
 - `/host/root/root.txt` is the outer-root `MAIN_FLAG{...}`.
+- The socket mount also reads the outer user flag directly
+  (`cat /host/home/webdev/user.txt`); the credential-reuse route below is the
+  intended, in-theme path rather than the only one (see Notes).
 - `/host/root/deploy.env` discloses `webdev`'s SSH password. Use it to log in on
   the outer-host SSH, published on port 22, and read the outer user flag:
 
@@ -112,3 +119,15 @@ SSH.
   the mako step cannot be skipped from the initial RCE.
 - The outer `webdev` account has no path to root on the outer host; the outer
   root flag is reachable only through the mounted Docker socket, as intended.
+- The mounted `docker.sock` yields outer root directly, so both outer MAIN flags
+  (root and user) are readable straight off the host filesystem mount. The
+  `deploy.env` recovery and SSH-as-`webdev` login are a realism flourish in
+  keeping with the reused-credential theme, not a load-bearing gate: they are
+  the intended path, but not the only one. Do not treat the SSH-as-`webdev` step
+  as required.
+- The outer `webdev` / deploy password is baked into the outer image build
+  history by the `chpasswd` line in the outer `Dockerfile`, so anyone handed the
+  built image (rather than a network-hosted instance) can recover it from
+  `docker history`. The intended hosting model is network-only; do not
+  distribute the built image. This is a known residual, recorded here so
+  maintainers are not surprised by it.

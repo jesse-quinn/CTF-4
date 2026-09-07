@@ -5,10 +5,14 @@ ARG DOCKER_CLI_VERSION=27.5.1
 # Base tooling: sshd for the lateral-movement step, libcap2-bin for the
 # capability privesc, and curl/ca-certificates to fetch the static Docker client
 # used in the final socket breakout.
+#
+# Flask and Jinja2 are pinned so the documented SSTI payload
+# (cycler.__init__.__globals__.os ...) keeps resolving across rebuilds; tested
+# against flask 3.1.3 / jinja2 3.1.6.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         openssh-server sudo libcap2-bin curl ca-certificates procps iproute2 \
-    && pip install --no-cache-dir flask \
+    && pip install --no-cache-dir 'flask==3.1.3' 'jinja2==3.1.6' \
     && echo "Installing a static Docker CLI (used for the final socket breakout)" \
     && arch="$(uname -m)" \
     && curl -fsSL "https://download.docker.com/linux/static/stable/${arch}/docker-${DOCKER_CLI_VERSION}.tgz" -o /tmp/docker.tgz \

@@ -24,7 +24,10 @@ COPY ./main_flags/user.txt /home/webdev/user.txt
 COPY ./docker-web /opt/studio
 
 # The deploy credential the socket-breakout stage recovers: webdev's own SSH
-# password, kept root-only on the outer host.
+# password, kept root-only on the outer host. NOTE: this same password is set
+# via chpasswd above, so it is recoverable from `docker history` of the built
+# image. That is acceptable only for the intended network-only hosting model
+# (see README "Hosting model"); do not distribute the built image.
 RUN printf 'DEPLOY_HOST=studio-staging\nDEPLOY_USER=webdev\nDEPLOY_PASSWORD=kZBrCqyOEkNIevVUrneXYt\n' > /root/deploy.env
 
 RUN echo "Permissions for flags" \
@@ -32,7 +35,7 @@ RUN echo "Permissions for flags" \
     && chown webdev:webdev /home/webdev/user.txt && chmod 0400 /home/webdev/user.txt \
     && chown root:root /root/deploy.env && chmod 0600 /root/deploy.env \
     && echo "Permissions for the inner stack" \
-    && chown -R root:root /opt/studio && chmod -R go-w /opt/studio
+    && chown -R root:root /opt/studio && chmod -R go-rwx /opt/studio
 
 # Store the inner Docker engine's data on a volume so the nested engine does not
 # run overlay-on-overlay (matches the official docker:dind image). Without this,
